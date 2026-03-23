@@ -2,7 +2,13 @@ const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal"); 
 const fs = require("fs"); 
 const { createCanvas, loadImage } = require("canvas"); 
-const client = new Client({ authStrategy: new LocalAuth() }); 
+const client = new Client({
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  }
+});
 client.on("qr", qr => { qrcode.generate(qr, { small: true }); }); 
 client.on("ready", () => { console.log("Bot conectado a WhatsApp"); });
 

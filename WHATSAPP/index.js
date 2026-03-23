@@ -3,7 +3,11 @@ const qrcode = require("qrcode-terminal");
 const fs = require("fs"); 
 const { createCanvas, loadImage } = require("canvas"); 
 const client = new Client({
-  authStrategy: new LocalAuth()
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    executablePath: "/opt/render/.cache/puppeteer/chrome/linux-146.0.7680.31/chrome-linux64/chrome",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  }
 });
 client.on("qr", qr => { qrcode.generate(qr, { small: true }); }); 
 client.on("ready", () => { console.log("Bot conectado a WhatsApp"); });

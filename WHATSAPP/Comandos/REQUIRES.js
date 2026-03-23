@@ -1,6 +1,6 @@
 /// REQUIRELANDIA ///
-const { puto, consejo, poema, zabaleta, dato, chiste, levelup, msj } = require('C:/Proyectos/Botardo/RESPUESTAS.json');
-const { respuestas, respuestas2, demostradas, usuarios, esperandoRespuesta, MARGEN_MENSAJES, mixages } = require('C:/Proyectos/Botardo/WHATSAPP/Comandos/MIXAGES');
+const { puto, consejo, poema, zabaleta, dato, chiste, levelup, msj } = require('../../RESPUESTAS');
+const { respuestas, respuestas2, demostradas, usuarios, esperandoRespuesta, MARGEN_MENSAJES, mixages } = require('./MIXAGES');
 
 function mezclar(clave, lista) {
   if (!lista || lista.length === 0) return null;

@@ -48,7 +48,7 @@ function SAVERTA() {
 }
 
 /// Require mixages ///
-const { mixages } = require('C:/Proyectos/Botardo/WHATSAPP/Comandos/MIXAGES');
+const { mixages } = require('./Comandos/MIXAGES.js');
 const imagenDefault = "Images/default.jpg";
 
 

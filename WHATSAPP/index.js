@@ -17,6 +17,7 @@ const client = new Client({
       "--disable-gpu"
     ]
   }
+}); 
 // Evento QR
 client.on("qr", qr => { 
   qrcode.generate(qr, { small: true }); 

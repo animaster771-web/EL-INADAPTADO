@@ -1,16 +1,28 @@
-const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js"); 
-const qrcode = require("qrcode-terminal"); 
-const fs = require("fs"); 
-const { createCanvas, loadImage } = require("canvas"); 
+const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
+const qrcode = require("qrcode-terminal");
+const fs = require("fs");
+const { createCanvas, loadImage } = require("canvas");
+
+// Cliente WhatsApp con Puppeteer automático
 const client = new Client({
+  authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath: '/opt/render/project/src/chrome/chrome/linux-131.0.6778.204/chrome-linux64/chrome',
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    headless: true
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   }
 });
-client.on("qr", qr => { qrcode.generate(qr, { small: true }); }); 
-client.on("ready", () => { console.log("Bot conectado a WhatsApp"); });
+
+// QR
+client.on("qr", qr => {
+  console.log("Escanea este QR con WhatsApp:");
+  qrcode.generate(qr, { small: true });
+});
+
+// Ready
+client.on("ready", () => {
+  console.log("Bot conectado a WhatsApp ✅");
+});
+
 
 /// COMANDOS ///
 const comandosArray = require('./Comandos/REQUIRES.js');

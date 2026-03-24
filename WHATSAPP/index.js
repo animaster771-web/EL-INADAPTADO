@@ -8,6 +8,7 @@ const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
+    executablePath: undefined, // <- asegura que use el Chromium interno
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",

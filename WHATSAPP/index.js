@@ -4,8 +4,6 @@ const fs = require("fs");
 const { createCanvas, loadImage } = require("canvas"); 
 
 // Cliente WhatsApp
-const chromium = require('chrome-aws-lambda');
-
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {

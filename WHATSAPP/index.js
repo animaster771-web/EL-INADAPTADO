@@ -4,17 +4,14 @@ const fs = require("fs");
 const { createCanvas, loadImage } = require("canvas"); 
 
 // Cliente WhatsApp
+const chromium = require('chrome-aws-lambda');
+
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    executablePath: undefined, // <- asegura que use el Chromium interno
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu"
-    ]
+    executablePath: await chromium.executablePath,
+    args: chromium.args
   }
 });
 

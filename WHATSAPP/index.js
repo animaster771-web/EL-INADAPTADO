@@ -10,7 +10,6 @@ const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    executablePath: puppeteer.executablePath(),
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -18,7 +17,6 @@ const client = new Client({
       "--disable-gpu"
     ]
   }
-});
 // Evento QR
 client.on("qr", qr => { 
   qrcode.generate(qr, { small: true }); 

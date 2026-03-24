@@ -10,11 +10,15 @@ const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    executablePath: await chromium.executablePath,
-    args: chromium.args
+    executablePath: '/usr/bin/chromium',
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu"
+    ]
   }
 });
-
 // Evento QR
 client.on("qr", qr => { 
   qrcode.generate(qr, { small: true }); 

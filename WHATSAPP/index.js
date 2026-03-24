@@ -1,6 +1,9 @@
-const { Client, LocalAuth } = require("whatsapp-web.js");
-const qrcode = require("qrcode-terminal");
+const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js"); 
+const qrcode = require("qrcode-terminal"); 
+const fs = require("fs"); 
+const { createCanvas, loadImage } = require("canvas"); 
 
+// Cliente WhatsApp
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
@@ -14,14 +17,14 @@ const client = new Client({
   }
 });
 
-client.on("qr", qr => {
-  qrcode.generate(qr, { small: true });
-});
+// Evento QR
+client.on("qr", qr => { 
+  qrcode.generate(qr, { small: true }); 
+}); 
 
-client.on("ready", () => {
-  console.log("Bot conectado a WhatsApp");
+client.on("ready", () => { 
+  console.log("Bot conectado a WhatsApp"); 
 });
-
 /// COMANDOS ///
 const comandosArray = require('./Comandos/REQUIRES.js');
 const rtas = require('../RESPUESTAS.json');

@@ -4,7 +4,7 @@ const fs = require("fs");
 const { createCanvas, loadImage } = require("canvas"); 
 const client = new Client({
   puppeteer: {
-    executablePath: '/opt/render/project/src/chrome/chrome/linux-131.0.6778.204/chrome-linux64/chrome'
+    executablePath: '/opt/render/project/src/chrome/chrome/linux-131.0.6778.204/chrome-linux64/chrome',
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
     headless: true
   }

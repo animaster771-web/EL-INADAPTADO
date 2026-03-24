@@ -4,10 +4,13 @@ const fs = require("fs");
 const { createCanvas, loadImage } = require("canvas"); 
 
 // Cliente WhatsApp
+const puppeteer = require('puppeteer');
+
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
+    executablePath: puppeteer.executablePath(),
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",

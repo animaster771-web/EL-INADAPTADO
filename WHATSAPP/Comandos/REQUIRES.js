@@ -1,15 +1,6 @@
 /// REQUIRELANDIA ///
-const { puto, consejo, poema, zabaleta, dato, chiste, levelup, msj } = require('../../RESPUESTAS');
-const {
-  respuestas,
-  respuestas2,
-  demostradas,
-  usuarios,
-  esperandoRespuesta,
-  MARGEN_MENSAJES,
-  mixages,
-  obtenerNombre
-} = require('./MIXAGES');
+const { puto, consejo, poema, zabaleta, dato, chiste, levelup, msj } = require('C:/Proyectos/Botardo/RESPUESTAS.json');
+const { respuestas, respuestas2, demostradas, usuarios, esperandoRespuesta, MARGEN_MENSAJES, mixages } = require('C:/Proyectos/Botardo/WHATSAPP/Comandos/MIXAGES');
 
 function mezclar(clave, lista) {
   if (!lista || lista.length === 0) return null;
@@ -27,14 +18,18 @@ function mezclar(clave, lista) {
 };
 
 module.exports = [
-
 {
 /// !PUTO ///
 name: "puto",
 
 async ejecutar(message) {
 
-const nombre = obtenerNombre(message.sender);
+const contact = await message.getContact();
+
+const nombre =
+contact.name ||
+contact.pushname ||
+"";
 
 let usuario = null;
 
@@ -54,10 +49,10 @@ const Propias = usuario && puto[usuario] ? puto[usuario] : [];
 
 const usarPropia = Propias.length > 0 && Math.random() < 0.5;
 
-const lista = usarPropia ? Propias : Generales;
+const respuestas = usarPropia ? Propias : Generales;
 const clave = usarPropia ? usuario : "Todos";
 
-const texto = mezclar(clave, lista);
+const texto = mezclar(clave, respuestas);
 
 message.reply(texto);
 },
@@ -74,7 +69,10 @@ message.reply(texto);
 
 if (texto === "No me disparen, soy imbécil") {
 
-const key = message.chatId + "_" + message.sender;
+const chatId = message.from;
+const userId = message.author || message.from;
+
+const key = chatId + "_" + userId;
 
 esperandoRespuesta[key] = {
 restante: MARGEN_MENSAJES,
@@ -87,7 +85,10 @@ tipo: "consejo"
 
 detectarRespuesta(message) {
 
-const key = message.chatId + "_" + message.sender;
+const chatId = message.from;
+const userId = message.author || message.from;
+
+const key = chatId + "_" + userId;
 
 if (!esperandoRespuesta[key]) return;
 
@@ -127,7 +128,10 @@ message.reply(texto);
 
 if (texto === "¿Es cierto?") {
 
-const key = message.chatId + "_" + message.sender;
+const chatId = message.from;
+const userId = message.author || message.from;
+
+const key = chatId + "_" + userId;
 
 esperandoRespuesta[key] = {
 restante: MARGEN_MENSAJES,
@@ -140,7 +144,11 @@ tipo: "poema"
 
 detectarRespuesta(message) {
 
-const key = message.chatId + "_" + message.sender;
+const chatId = message.from;
+const userId = message.author || message.from;
+
+const key = chatId + "_" + userId;
+
 const contenido = message.body.toLowerCase();
 
 if (esperandoRespuesta[key]) {
@@ -215,7 +223,27 @@ async ejecutar(message, NewLevel) {
 
 let texto = mezclar("levelup", levelup);
 
-const nombre = obtenerNombre(message.sender);
+let nombre = "Usuario";
+
+try {
+
+if (message.getContact) {
+
+const contacto = await message.getContact();
+nombre = contacto.pushname || contacto.name || "Usuario";
+
+}
+else if (message.author?.username) {
+
+nombre = message.author.username;
+
+}
+
+} catch {
+
+nombre = "Usuario";
+
+}
 
 texto = texto
 .replace(/\${NewLevel}/g, NewLevel)
@@ -234,7 +262,8 @@ async ejecutar(message, ID) {
 
 let texto = mezclar("msj", msj);
 
-const nombre = obtenerNombre(message.sender);
+const contacto = await message.getContact();
+const nombre = contacto.pushname || contacto.name || "Usuario";
 
 texto = texto
 .replace(/\${ID\.MensajesEnviados}/g, ID.MensajesEnviados)
@@ -278,8 +307,8 @@ message.reply(`COMANDOS:
 !addputo.Judas (Ayrton)
 !addputo.Yo 🗿 (Uriel)
 --- AYUDA ---
-!help`)
+!help
+ahre`)
 }
 }
-
-];
+]

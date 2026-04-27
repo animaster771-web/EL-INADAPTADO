@@ -1,19 +1,16 @@
 {
   "name": "portwhats",
   "version": "1.0.0",
-  "description": "Bot de WhatsApp con whatsapp-web.js",
+  "description": "Bot de WhatsApp con Baileys",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "start": "node index.js"
   },
   "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.7",
     "axios": "^1.13.6",
     "better-sqlite3": "^12.6.2",
-    "canvas": "^3.2.1",
-    "puppeteer": "21.3.8",
-    "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "^1.34.6"
+    "canvas": "^3.2.1"
   }
 }

@@ -1,6 +1,13 @@
+const path = require("path");
+
 /// REQUIRELANDIA ///
-const { puto, consejo, poema, zabaleta, dato, chiste, levelup, msj } = require('C:/Proyectos/Botardo/RESPUESTAS.json');
-const { respuestas, respuestas2, demostradas, usuarios, esperandoRespuesta, MARGEN_MENSAJES, mixages } = require('C:/Proyectos/Botardo/WHATSAPP/Comandos/MIXAGES');
+const {
+  puto, consejo, poema, zabaleta, dato, chiste, levelup, msj
+} = require(path.join(__dirname, "../../RESPUESTAS.json"));
+
+const {
+  respuestas, respuestas2, demostradas, usuarios, esperandoRespuesta, MARGEN_MENSAJES, mixages
+} = require(path.join(__dirname, "./MIXAGES"));
 
 function mezclar(clave, lista) {
   if (!lista || lista.length === 0) return null;
@@ -18,6 +25,7 @@ function mezclar(clave, lista) {
 };
 
 module.exports = [
+
 {
 /// !PUTO ///
 name: "puto",
@@ -311,4 +319,5 @@ message.reply(`COMANDOS:
 ahre`)
 }
 }
-]
+
+];

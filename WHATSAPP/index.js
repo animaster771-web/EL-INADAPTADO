@@ -21,6 +21,9 @@ const client = new Client({
 
 client.on("qr", qr => { qrcode.generate(qr, { small: true }); });
 client.on("ready", () => { console.log("Bot conectado a WhatsApp"); });
+client.initialize()
+  .then(() => console.log("Inicializando WhatsApp..."))
+  .catch(err => console.error("ERROR CRÍTICO:", err));
 
 /// COMANDOS ///
 const comandosArray = require('./Comandos/REQUIRES.js');

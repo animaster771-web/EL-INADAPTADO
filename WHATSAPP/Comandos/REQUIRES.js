@@ -1,6 +1,15 @@
 /// REQUIRELANDIA ///
 const { puto, consejo, poema, zabaleta, dato, chiste, levelup, msj } = require('../../RESPUESTAS');
-const { respuestas, respuestas2, demostradas, usuarios, esperandoRespuesta, MARGEN_MENSAJES, mixages } = require('./MIXAGES');
+const {
+  respuestas,
+  respuestas2,
+  demostradas,
+  usuarios,
+  esperandoRespuesta,
+  MARGEN_MENSAJES,
+  mixages,
+  obtenerNombre
+} = require('./MIXAGES');
 
 function mezclar(clave, lista) {
   if (!lista || lista.length === 0) return null;
@@ -18,18 +27,14 @@ function mezclar(clave, lista) {
 };
 
 module.exports = [
+
 {
 /// !PUTO ///
 name: "puto",
 
 async ejecutar(message) {
 
-const contact = await message.getContact();
-
-const nombre =
-contact.name ||
-contact.pushname ||
-"";
+const nombre = obtenerNombre(message.sender);
 
 let usuario = null;
 
@@ -49,10 +54,10 @@ const Propias = usuario && puto[usuario] ? puto[usuario] : [];
 
 const usarPropia = Propias.length > 0 && Math.random() < 0.5;
 
-const respuestas = usarPropia ? Propias : Generales;
+const lista = usarPropia ? Propias : Generales;
 const clave = usarPropia ? usuario : "Todos";
 
-const texto = mezclar(clave, respuestas);
+const texto = mezclar(clave, lista);
 
 message.reply(texto);
 },
@@ -69,10 +74,7 @@ message.reply(texto);
 
 if (texto === "No me disparen, soy imbécil") {
 
-const chatId = message.from;
-const userId = message.author || message.from;
-
-const key = chatId + "_" + userId;
+const key = message.chatId + "_" + message.sender;
 
 esperandoRespuesta[key] = {
 restante: MARGEN_MENSAJES,
@@ -85,10 +87,7 @@ tipo: "consejo"
 
 detectarRespuesta(message) {
 
-const chatId = message.from;
-const userId = message.author || message.from;
-
-const key = chatId + "_" + userId;
+const key = message.chatId + "_" + message.sender;
 
 if (!esperandoRespuesta[key]) return;
 
@@ -128,10 +127,7 @@ message.reply(texto);
 
 if (texto === "¿Es cierto?") {
 
-const chatId = message.from;
-const userId = message.author || message.from;
-
-const key = chatId + "_" + userId;
+const key = message.chatId + "_" + message.sender;
 
 esperandoRespuesta[key] = {
 restante: MARGEN_MENSAJES,
@@ -144,11 +140,7 @@ tipo: "poema"
 
 detectarRespuesta(message) {
 
-const chatId = message.from;
-const userId = message.author || message.from;
-
-const key = chatId + "_" + userId;
-
+const key = message.chatId + "_" + message.sender;
 const contenido = message.body.toLowerCase();
 
 if (esperandoRespuesta[key]) {
@@ -223,27 +215,7 @@ async ejecutar(message, NewLevel) {
 
 let texto = mezclar("levelup", levelup);
 
-let nombre = "Usuario";
-
-try {
-
-if (message.getContact) {
-
-const contacto = await message.getContact();
-nombre = contacto.pushname || contacto.name || "Usuario";
-
-}
-else if (message.author?.username) {
-
-nombre = message.author.username;
-
-}
-
-} catch {
-
-nombre = "Usuario";
-
-}
+const nombre = obtenerNombre(message.sender);
 
 texto = texto
 .replace(/\${NewLevel}/g, NewLevel)
@@ -262,8 +234,7 @@ async ejecutar(message, ID) {
 
 let texto = mezclar("msj", msj);
 
-const contacto = await message.getContact();
-const nombre = contacto.pushname || contacto.name || "Usuario";
+const nombre = obtenerNombre(message.sender);
 
 texto = texto
 .replace(/\${ID\.MensajesEnviados}/g, ID.MensajesEnviados)
@@ -307,8 +278,8 @@ message.reply(`COMANDOS:
 !addputo.Judas (Ayrton)
 !addputo.Yo 🗿 (Uriel)
 --- AYUDA ---
-!help
-ahre`)
+!help`)
 }
 }
-]
+
+];

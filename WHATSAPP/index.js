@@ -1,15 +1,14 @@
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason
-} = require("@whiskeysockets/baileys");
-
-const fs = require("fs");
-const { createCanvas, loadImage } = require("canvas");
+const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js"); 
+const qrcode = require("qrcode-terminal"); 
+const fs = require("fs"); 
+const { createCanvas, loadImage } = require("canvas"); 
+const client = new Client({ authStrategy: new LocalAuth() }); 
+client.on("qr", qr => { qrcode.generate(qr, { small: true }); }); 
+client.on("ready", () => { console.log("Bot conectado a WhatsApp"); });
 
 /// COMANDOS ///
-const comandosArray = require("./Comandos/REQUIRES.js");
-const rtas = require("../RESPUESTAS.json");
+const comandosArray = require('./Comandos/REQUIRES.js');
+const rtas = require('../RESPUESTAS.json');
 
 const comandos = {};
 for (const cmd of comandosArray) {
@@ -17,7 +16,7 @@ for (const cmd of comandosArray) {
 }
 const llave = Object.keys(comandos);
 
-/// IMÁGENES ///
+/// IMAGENES LOCALES ///
 const rutasImagen = {
   "Muñoz": "Images/Quag",
   "Michau": "Images/Techo",
@@ -27,6 +26,7 @@ const rutasImagen = {
   "Maty": "Images/Maty"
 };
 
+/// DATOS DEL USUARIO ///
 const nombresNumero = {
   "5492634214467": "Ayrton",
   "5492634760758": "Maty",
@@ -38,30 +38,28 @@ const nombresNumero = {
 
 let usuarios = {};
 
-/// 🔥 CARGAR Y MIGRAR USUARIOS
-try {
-  const data = JSON.parse(fs.readFileSync("./level.json"));
-
-  for (const key in data) {
-
-    const nuevoId = key
-      .replace("@c.us", "@s.whatsapp.net");
-
-    usuarios[nuevoId] = data[key];
-  }
-
-} catch {}
-
-/// GUARDAR RESPUESTAS
+/// Guardar respuestas ///
 function SAVERTA() {
-  fs.writeFileSync("../RESPUESTAS.json", JSON.stringify(rtas, null, 2));
+  fs.writeFile(
+    "../RESPUESTAS.json",
+    JSON.stringify(rtas, null, 2),
+    err => { if (err) console.error(err); }
+  );
 }
 
-/// CONTROL IMÁGENES
+/// Require mixages ///
+const { mixages } = require('C:/Proyectos/Botardo/WHATSAPP/Comandos/MIXAGES');
+const imagenDefault = "Images/default.jpg";
+
+
+/// CONTROL PARA NO REPETIR IMAGENES
 let imagenesUsadas = {};
 
 function obtenerImagenAleatoria(carpeta) {
-  if (!imagenesUsadas[carpeta]) imagenesUsadas[carpeta] = [];
+
+  if (!imagenesUsadas[carpeta]) {
+    imagenesUsadas[carpeta] = [];
+  }
 
   const archivos = fs.readdirSync(carpeta)
     .filter(f => f.endsWith(".png") || f.endsWith(".jpg") || f.endsWith(".jpeg"));
@@ -74,181 +72,331 @@ function obtenerImagenAleatoria(carpeta) {
   }
 
   const elegido = disponibles[Math.floor(Math.random() * disponibles.length)];
+
   imagenesUsadas[carpeta].push(elegido);
 
   return `${carpeta}/${elegido}`;
 }
 
-/// SOCKET
-async function startBot() {
+/// LEVEL DATA ///
+try {
+  const data = fs.readFileSync("./level.json", "utf8");
+  usuarios = JSON.parse(data);
+} catch { }
 
-  const { state, saveCreds } = await useMultiFileAuthState("auth");
 
-  const sock = makeWASocket({
-    auth: state,
-    printQRInTerminal: true
-  });
+client.on("message", async (message) => {
 
-  sock.ev.on("creds.update", saveCreds);
+  if (message.fromMe) return;
 
-  sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
+  /// DATOS DE USUARIO ///
+  const contacto = await message.getContact();
 
-    if (connection === "close") {
 
-      const shouldReconnect =
-        lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+  let userId = contacto.id._serialized;
+  let numero = contacto.number;
+  let nombre = contacto.pushname || contacto.name || numero;
 
-      if (shouldReconnect) startBot();
 
-    } else if (connection === "open") {
-
-      console.log("✅ Bot conectado con Baileys");
-
-    }
-
-  });
-
-  sock.ev.on("messages.upsert", async ({ messages }) => {
-
-    const msg = messages[0];
-    if (!msg.message) return;
-
-    const from = msg.key.remoteJid;
-    const sender = msg.key.participant || from;
-
-    /// FILTROS IMPORTANTES
-    if (sender === "status@broadcast") return;
-    if (sender.includes("@lid")) return;
-    if (sender.includes("@bot")) return;
-
-    const contenido =
-      msg.message.conversation ||
-      msg.message.extendedTextMessage?.text ||
-      "";
-
-    if (!contenido) return;
-
-    /// CREAR USUARIO
-    if (!usuarios[sender]) {
-      usuarios[sender] = {
-        MensajesEnviados: 0,
-        XP: 0,
-        LastXP: 0,
-        Level: 0
-      };
-    }
-
-    const ID = usuarios[sender];
-
-    /// WRAPPER (simula whatsapp-web.js)
-    const message = {
-      body: contenido.toLowerCase(),
-      sender: sender,
-      chatId: from,
-      reply: (txt) => sock.sendMessage(from, { text: txt })
+  if (!usuarios[userId]) {
+    usuarios[userId] = {
+      MensajesEnviados: 0,
+      XP: 0,
+      LastXP: 0,
+      Level: 0
     };
 
-    /// RESPUESTAS INTERACTIVAS
-    ["poema", "consejo"].forEach(c => {
-      try {
-        comandos[c]?.detectarRespuesta?.(message);
-      } catch {}
-    });
+  }
+  const ID = usuarios[userId];
 
-    /// COMANDOS
-    const comando = llave.find(c => message.body.includes("!" + c));
+  /// NOW ///
+  const ya = Date.now();
+  const contenido = (message.body || "").toLowerCase();
 
-    if (comando) {
-      try {
-        await comandos[comando].ejecutar(message, ID);
-      } catch (err) {
-        console.log("Error comando:", err);
+  /// RESPUESTAS INTERACTIVAS ///
+  ["poema", "consejo"].forEach(c => {
+    try {
+      if (comandos[c]?.detectarRespuesta) {
+        comandos[c].detectarRespuesta(message);
       }
+    } catch (err) {
+      console.log(`Error ${c}:`, err);
+    }
+  });
+
+  /// COMANDOS ///
+  const comando = llave.find(c => contenido.includes("!" + c));
+  if (comando) {
+    try {
+      await comandos[comando].ejecutar(message, ID);
+    } catch (err) {
+      console.log("Error comando:", err);
+    }
+  }
+
+
+  /// SISTEMA LEVEL CONTINÚA ///
+  ID.MensajesEnviados++;
+
+  if (ya - ID.LastXP >= 60000) {
+
+    ID.XP += Math.floor(Math.random() * 15 + 10);
+    ID.LastXP = ya;
+
+  }
+
+  let xpNecesaria = 5 * ID.Level ** 2 + 50 * ID.Level + 100;
+
+  if (ID.XP >= xpNecesaria) {
+
+    ID.Level++;
+
+
+    try {
+
+      await comandos["levelup"].ejecutar(message, ID.Level);
+
+    } catch (err) {
+
+      console.log("Error levelup:", err);
+
     }
 
-    /// SISTEMA XP
-    const ya = Date.now();
+  }
 
-    ID.MensajesEnviados++;
+  /// COMANDO RANK ///
+  if (contenido.includes("!rank")) {
 
-    if (ya - ID.LastXP >= 60000) {
-      ID.XP += Math.floor(Math.random() * 15 + 10);
-      ID.LastXP = ya;
+    let contact;
+
+    /// DETECTAR USUARIO OBJETIVO
+    if (message.hasQuotedMsg) {
+
+      const quoted = await message.getQuotedMessage();
+      contact = await quoted.getContact();
+
+    } else if (message.mentionedIds.length) {
+
+      contact = await client.getContactById(message.mentionedIds[0]);
+
+    } else {
+
+      contact = await message.getContact();
+
+    }
+
+    let userId = contact.id._serialized;
+    let numero = contact.number;
+    let nombre = contact.pushname || contact.name || numero;
+
+    const ID = usuarios[userId];
+
+    if (!ID) {
+      message.reply("Ese usuario todavía no tiene XP.");
+      return;
     }
 
     let xpNecesaria = 5 * ID.Level ** 2 + 50 * ID.Level + 100;
+    let porcentaje = ID.XP / xpNecesaria;
 
-    if (ID.XP >= xpNecesaria) {
-      ID.Level++;
+    if (porcentaje > 1) porcentaje = 1;
 
-      try {
-        await comandos["levelup"].ejecutar(message, ID.Level);
-      } catch {}
+    let ranking = Object.entries(usuarios)
+      .sort((a, b) => b[1].XP - a[1].XP);
+
+    let posicion = ranking.findIndex(user => user[0] === userId) + 1;
+
+
+    /// CANVAS
+    const canvas = createCanvas(934, 282);
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#23272A";
+    ctx.fillRect(0, 0, 934, 282);
+
+
+    /// NOMBRE DEL CANVAS
+    let nombreFinal = nombresNumero[numero] || "Usuario";
+
+
+    /// AVATAR
+    let avatar;
+
+    try {
+
+      if (rutasImagen[nombreFinal]) {
+
+        const carpeta = rutasImagen[nombreFinal];
+        const rutaImagen = obtenerImagenAleatoria(carpeta);
+
+        avatar = await loadImage(rutaImagen);
+
+      } else {
+
+        avatar = await loadImage(imagenDefault);
+
+      }
+
+    } catch {
+
+      avatar = await loadImage(imagenDefault);
+
     }
 
-    /// RANK
-    if (message.body.includes("!rank")) {
 
-      const userId = sender;
-      const ID = usuarios[userId];
+    /// AVATAR CIRCULAR
+    ctx.save();
 
-      if (!ID) {
-        message.reply("Ese usuario no tiene XP.");
+    ctx.beginPath();
+    ctx.arc(140, 141, 80, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+
+    const size = 160;
+    const ratio = Math.max(size / avatar.width, size / avatar.height);
+
+    const newWidth = avatar.width * ratio;
+    const newHeight = avatar.height * ratio;
+
+    const x = 140 - newWidth / 2;
+    const y = 141 - newHeight / 2;
+
+    ctx.drawImage(avatar, x, y, newWidth, newHeight);
+
+    ctx.restore();
+
+
+    /// TEXTO
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 38px Arial";
+    ctx.fillText(nombreFinal, 270, 115);
+
+    ctx.fillStyle = "#B9BBBE";
+    ctx.font = "22px Arial";
+    ctx.fillText(`${ID.XP} / ${xpNecesaria} XP`, 270, 155);
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 32px Arial";
+    ctx.fillText(`#${posicion}`, 790, 70);
+
+    ctx.fillStyle = "#ED4245";
+    ctx.font = "bold 45px Arial";
+    ctx.fillText(`NIVEL ${ID.Level}`, 650, 120);
+
+
+    /// BARRA XP
+    ctx.fillStyle = "#2C2F33";
+    ctx.fillRect(270, 190, 550, 25);
+
+    ctx.fillStyle = "#ED4245";
+    ctx.fillRect(270, 190, 550 * porcentaje, 25);
+
+
+    const buffer = canvas.toBuffer("image/png");
+
+    const media = new MessageMedia(
+      "image/png",
+      buffer.toString("base64"),
+      "rank.png"
+    );
+
+    await message.reply(media);
+
+  }
+
+  /// COMANDO MENSAJES ///
+  for (const rta of Object.keys(rtas)) {
+
+    const prefix = "!add" + rta;
+
+    if (contenido.startsWith(prefix)) {
+
+      if (rta === "levelup" || rta === "msj") {
+        message.reply("No podés modificar estos comandos, imbécil.");
         return;
       }
 
-      let xpNecesaria = 5 * ID.Level ** 2 + 50 * ID.Level + 100;
-      let porcentaje = ID.XP / xpNecesaria;
-      if (porcentaje > 1) porcentaje = 1;
+      // CASO ESPECIAL: puto
+      if (rta === "puto") {
 
-      const canvas = createCanvas(934, 282);
-      const ctx = canvas.getContext("2d");
+        const subcomandos = Object.keys(rtas.puto);
 
-      ctx.fillStyle = "#23272A";
-      ctx.fillRect(0, 0, 934, 282);
+        let encontrado = null;
 
-      const numero = sender.split("@")[0];
-      const nombreFinal = nombresNumero[numero] || "Usuario";
+        for (const nombre of subcomandos) {
 
-      let avatar;
+          const comando = (prefix + "." + nombre).toLowerCase();
 
-      try {
-        if (rutasImagen[nombreFinal]) {
-          avatar = await loadImage(obtenerImagenAleatoria(rutasImagen[nombreFinal]));
-        } else {
-          avatar = await loadImage("Images/default.jpg");
+          if (contenido.startsWith(comando)) {
+            encontrado = nombre; // guardamos el nombre original
+            break;
+          }
+
         }
-      } catch {
-        avatar = await loadImage("Images/default.jpg");
+
+        if (!encontrado) {
+          message.reply(
+            `Así no se hace este comando, te muestro las formas de hacerlo:
+!addputo.Todos
+!addputo.Maty
+!addputo.Walter
+!addputo.Quagmire de la Saladix (Muñoz)
+!addputo.Judas (Ayrton)
+!addputo.Techo de chapa (Michau)
+!addputo.Yo 🗿 (Uriel)`
+          );
+          return;
+        }
+
+        let CustomMessage = message.body
+          .slice((prefix + "." + encontrado).length)
+          .trim();
+
+        if (CustomMessage.length === 0) {
+          message.reply("Bah? Pero escribí algo morsa");
+          return;
+        }
+
+        rtas.puto[encontrado].push(CustomMessage);
+
+        message.reply(`✅ Respuesta añadida a puto.${encontrado}`);
+
+        SAVERTA();
+
+        break;
       }
 
-      ctx.beginPath();
-      ctx.arc(140, 141, 80, 0, Math.PI * 2);
-      ctx.clip();
+      // COMANDOS NORMALES
+      let CustomMessage = message.body.slice(prefix.length).trim();
 
-      ctx.drawImage(avatar, 60, 60, 160, 160);
+      if (CustomMessage.length === 0) {
+        message.reply("Bah? Pero escribí algo morsa");
+        return;
+      }
 
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 38px Arial";
-      ctx.fillText(nombreFinal, 270, 115);
+      rtas[rta].push(CustomMessage);
 
-      ctx.fillStyle = "#ED4245";
-      ctx.fillRect(270, 190, 550 * porcentaje, 25);
+      if (!mixages[rta]) mixages[rta] = [];
+      mixages[rta].push(CustomMessage);
 
-      const buffer = canvas.toBuffer("image/png");
+      message.reply(`✅ Respuesta añadida a ${rta}`);
 
-      await sock.sendMessage(from, {
-        image: buffer,
-        caption: "🏆 Tu rango"
-      });
+      SAVERTA();
+
+      break;
     }
 
-  });
+  }
+});
 
-  /// GUARDADO AUTOMÁTICO
-  setInterval(() => {
-    fs.writeFileSync("./level.json", JSON.stringify(usuarios, null, 2));
-  }, 30000);
-}
+/// SAVE ///
+setInterval(() => {
 
-startBot();
+  fs.writeFile(
+    "./level.json",
+    JSON.stringify(usuarios, null, 2),
+    err => { if (err) console.error(err); }
+  );
+}, 30000);
+
+client.initialize();

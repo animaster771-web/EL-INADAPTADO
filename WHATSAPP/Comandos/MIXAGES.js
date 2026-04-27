@@ -4,6 +4,7 @@ const respuestas = [
   "qué cosa?",
   "que cosa?"
 ];
+
 const respuestas2 = [
   "a ver, demuéstralo",
   "a ver, demuestralo",
@@ -12,6 +13,7 @@ const respuestas2 = [
   "demuéstralo",
   "demuestralo",
 ];
+
 const demostradas = [
   "Oh Bananirou eres mejor que Spreen...",
   "Naruto es mejor que Dragon Ball...",
@@ -19,6 +21,8 @@ const demostradas = [
   "One Piece es el mejor anime de la historia",
   "Riquelme eres mejor que Zidane"
 ];
+
+/// ⚠️ IMPORTANTE: ahora usamos número limpio (sin @)
 const usuarios = {
   "5492634214467": "Judas",
   "5492634760758": "Maty",
@@ -27,8 +31,30 @@ const usuarios = {
   "5492634382707": "Walterchan",
   "5492634541947": "Yo 🗿",
 };
+
 const esperandoRespuesta = {};
 const MARGEN_MENSAJES = 5;
 const mixages = {};
 
-module.exports = { respuestas, respuestas2, demostradas, usuarios, esperandoRespuesta, MARGEN_MENSAJES, mixages };
+/// 🔥 FUNCIÓN NUEVA (clave para Baileys)
+function obtenerNumero(sender) {
+  return sender.split("@")[0];
+}
+
+/// 🔥 FUNCIÓN NUEVA (te evita bugs)
+function obtenerNombre(sender) {
+  const numero = obtenerNumero(sender);
+  return usuarios[numero] || "Usuario";
+}
+
+module.exports = {
+  respuestas,
+  respuestas2,
+  demostradas,
+  usuarios,
+  esperandoRespuesta,
+  MARGEN_MENSAJES,
+  mixages,
+  obtenerNumero,
+  obtenerNombre
+};
